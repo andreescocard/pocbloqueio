@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPA com jQuery</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .screen {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        input, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .radio-group {
+            margin-bottom: 10px;
+        }
+        .radio-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        #biometryImage {
+            width: 100%;
+            max-width: 200px;
+            margin: 20px auto;
+            display: block;
+        }
+        #senhaAcionamento {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #qrcode {
+            margin: 20px auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="screen1" class="screen active">
+        <h2>Informações Pessoais</h2>
+        <input type="text" id="cpf" placeholder="CPF">
+        <input type="tel" id="telefone" placeholder="Número de Celular">
+        <button id="avancar1">Avançar</button>
+    </div>
+
+    <div id="screen2" class="screen">
+        <h2>Selecione o Serviço</h2>
+        <div class="radio-group">
+            <label><input type="radio" name="servico" value="bloqueio_tela"> Bloqueio de Tela</label>
+            <label><input type="radio" name="servico" value="bloqueio_linha"> Bloqueio de Linha</label>
+            <label><input type="radio" name="servico" value="reset_dispositivo"> Reset Dispositivo</label>
+            <label><input type="radio" name="servico" value="bloqueio_imei"> Bloqueio de IMEI</label>
+        </div>
+        <div id="senhaAcionamento"></div>
+        <button id="avancar2">Avançar</button>
+    </div>
+
+    <div id="screen3" class="screen">
+        <h2>Biometria</h2>
+        <img id="biometryImage" src="/placeholder.svg?height=200&width=200" alt="Biometria">
+        <button id="avancar3">Avançar</button>
+    </div>
+
+    <div id="screen3b" class="screen">
+        <h2>Dispositivo não compatível</h2>
+        <p>Por favor, use um dispositivo móvel para continuar.</p>
+        <div id="qrcode"></div>
+    </div>
+
+    <div id="screen4" class="screen">
+        <h2>Solicitação realizada com sucesso</h2>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            function showScreen(screenNumber) {
+                $('.screen').removeClass('active');
+                $('#screen' + screenNumber).addClass('active');
+            }
+
+            function generateRandomNumber() {
+                return Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+            }
+
+            function isMobileDevice() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            }
+
+            function generateQRCode(url) {
+                var typeNumber = 0;
+                var errorCorrectionLevel = 'L';
+                var qr = qrcode(typeNumber, errorCorrectionLevel);
+                qr.addData(url);
+                qr.make();
+                document.getElementById('qrcode').innerHTML = qr.createImgTag();
+            }
+
+            $('#avancar1').click(function() {
+                var cpf = $('#cpf').val();
+                var telefone = $('#telefone').val();
+                if (cpf && telefone) {
+                    showScreen(2);
+                    $('#senhaAcionamento').text('Senha de acionamento: ' + generateRandomNumber());
+                } else {
+                    alert('Por favor, preencha todos os campos.');
+                }
+            });
+
+            $('#avancar2').click(function() {
+                var servico = $('input[name="servico"]:checked').val();
+                if (servico) {
+                    if (isMobileDevice()) {
+                        showScreen(3);
+                    } else {
+                        showScreen('3b');
+                        generateQRCode('https://www.google.com');
+                    }
+                } else {
+                    alert('Por favor, selecione um serviço.');
+                }
+            });
+
+            $('#avancar3').click(function() {
+                showScreen(4);
+            });
+        });
+    </script>
+</body>
+</html>
+
