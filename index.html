@@ -52,6 +52,15 @@
             margin: 20px auto;
             display: block;
         }
+        #statusMessage {
+            margin-top: 20px;
+            font-style: italic;
+        }
+        #validationStatus {
+            margin-top: 20px;
+            font-weight: bold;
+            color: green;
+        }
     </style>
 </head>
 <body>
@@ -84,6 +93,8 @@
         <h2>Dispositivo não compatível</h2>
         <p>Por favor, use um dispositivo móvel para continuar.</p>
         <div id="qrcode"></div>
+        <p id="statusMessage">Ao finalizar a validação pelo dispositivo móvel essa tela será atualizada.</p>
+        <div id="validationStatus"></div>
     </div>
 
     <div id="screen4" class="screen">
@@ -92,6 +103,8 @@
 
     <script>
         $(document).ready(function() {
+            var pollingInterval;
+
             function showScreen(screenNumber) {
                 $('.screen').removeClass('active');
                 $('#screen' + screenNumber).addClass('active');
@@ -114,6 +127,27 @@
                 document.getElementById('qrcode').innerHTML = qr.createImgTag();
             }
 
+            function pollStatus() {
+                $.ajax({
+                    url: 'https://6765e1a9410f84999656613f.mockapi.io/status',
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                    
+                        for (let i = 0; i < data.length; i++) {
+                            if (data[i].id == "10" && data[i].status === true) {
+                                clearInterval(pollingInterval);
+                                $('#validationStatus').text('Biometria validada com sucesso');
+                                return; 
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error polling status:", error);
+                    }
+                });
+            }
+
             $('#avancar1').click(function() {
                 var cpf = $('#cpf').val();
                 var telefone = $('#telefone').val();
@@ -133,6 +167,8 @@
                     } else {
                         showScreen('3b');
                         generateQRCode('https://www.google.com');
+                        $('#validationStatus').text('');
+                        pollingInterval = setInterval(pollStatus, 2000);
                     }
                 } else {
                     alert('Por favor, selecione um serviço.');
